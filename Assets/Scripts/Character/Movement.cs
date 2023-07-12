@@ -38,15 +38,21 @@ namespace Character
         private float _verticalMovement;
 
         [Header("Ground Detection")]
-        [SerializeField]
-        private Transform groundCheck;
+        [SerializeField] private Transform groundCheck;
         [SerializeField] private LayerMask groundMask;
         [SerializeField] private float groundDistance = 0.2f;
         private bool IsGrounded { get; set; }
 
+        [Header("Animation")]
+        [SerializeField] private Animator animator;
+        private readonly int _speedId = Animator.StringToHash("Speed");
+        private readonly int _sprintId = Animator.StringToHash("Sprint");
+        private readonly int _jumpId = Animator.StringToHash("JumpTrigger");
+        private readonly int _groundId = Animator.StringToHash("Ground");
+
         private Vector3 _moveDirection;
         private Vector3 _slopeMoveDirection;
-
+        
         private Rigidbody _rb;
 
         private RaycastHit _slopeHit;
@@ -94,6 +100,7 @@ namespace Character
         private void Jump()
         {
             if (!IsGrounded) return;
+            animator.SetTrigger(_jumpId);
             _rb.velocity = new Vector3(_rb.velocity.x, 0, _rb.velocity.z);
             _rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
         }
@@ -102,10 +109,12 @@ namespace Character
         {
             if (Input.GetKey(sprintKey) && IsGrounded)
             {
+                animator.SetBool(_sprintId, true);
                 moveSpeed = Mathf.Lerp(moveSpeed, sprintSpeed, acceleration * Time.deltaTime);
             }
             else
             {
+                animator.SetBool(_sprintId, false);
                 moveSpeed = Mathf.Lerp(moveSpeed, walkSpeed, acceleration * Time.deltaTime);
             }
         }
@@ -118,6 +127,7 @@ namespace Character
         private void FixedUpdate()
         {
             MovePlayer();
+            ControlJump();
         }
 
         private void MovePlayer()
@@ -134,6 +144,13 @@ namespace Character
                     _rb.AddForce(_moveDirection.normalized * moveSpeed * _movementMultiplier * airMultiplier, ForceMode.Acceleration);
                     break;
             }
+            
+            animator.SetFloat(_speedId, _rb.velocity.magnitude);
+        }
+
+        private void ControlJump()
+        {
+            animator.SetBool(_groundId, IsGrounded);
         }
 
         private void RotatePlayer()
