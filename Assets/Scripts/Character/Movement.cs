@@ -41,10 +41,10 @@ namespace Character
         [SerializeField] private Transform groundCheck;
         [SerializeField] private LayerMask groundMask;
         [SerializeField] private float groundDistance = 0.2f;
-        private bool IsGrounded { get; set; }
+        public bool IsGrounded { get; set; }
 
         [Header("Animation")]
-        [SerializeField] private Animator animator;
+        public Animator animator;
         private readonly int _speedId = Animator.StringToHash("Speed");
         private readonly int _sprintId = Animator.StringToHash("Sprint");
         private readonly int _jumpId = Animator.StringToHash("JumpTrigger");
@@ -160,6 +160,13 @@ namespace Character
             
             if (_moveDirection != Vector3.zero)
                 transform.forward = Vector3.Slerp(transform.forward, _moveDirection.normalized, Time.deltaTime * rotationSpeed);
+        }
+        
+        void OnDrawGizmosSelected()
+        {
+            // Draw a yellow sphere at the transform's position
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawSphere(groundCheck.position, groundDistance);
         }
     }
 }
