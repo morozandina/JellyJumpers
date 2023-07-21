@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 6294905732258787104}
   - component: {fileID: 8014434028637397760}
   - component: {fileID: 3613335447526725975}
-  - component: {fileID: 2215313745152409997}
+  - component: {fileID: 8135560756215705883}
   m_Layer: 7
   m_Name: U_Barrel_A_01
   m_TagString: Ledge
@@ -84,8 +84,8 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!136 &2215313745152409997
-CapsuleCollider:
+--- !u!64 &8135560756215705883
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -102,8 +102,7 @@ CapsuleCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.4696288
-  m_Height: 1.2802395
-  m_Direction: 1
-  m_Center: {x: 0.00009533763, y: 0.6395195, z: -0.00017222762}
+  serializedVersion: 5
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: 44effe56c65b2774f8789163a7263283, type: 2}

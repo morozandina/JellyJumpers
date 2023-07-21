@@ -15,8 +15,13 @@ namespace Character
          [Header("Movement")]
          [SerializeField] private float moveSpeed = 6f;
          [SerializeField] private float airMultiplier = 0.4f;
-         [SerializeField] private float _movementMultiplier = 10f;
+         [SerializeField] private float movementMultiplier = 10f;
          [SerializeField] private float rotationSpeed;
+
+         [Header("Step Climb")]
+         [SerializeField] private GameObject stepRayUpper;
+         [SerializeField] private GameObject stepRayLower;
+         [SerializeField] private float stepSmooth = .1f;
 
          [Header("Sprinting")]
          [SerializeField] private float walkSpeed = 4f;
@@ -41,7 +46,18 @@ namespace Character
          [SerializeField] private Transform groundCheck;
          [SerializeField] private LayerMask groundMask;
          [SerializeField] private float groundDistance = 0.2f;
-         public bool IsGrounded { get; set; }
+
+         private bool _isGrounded = true;
+         public bool IsGrounded
+         {
+             get => _isGrounded;
+             private set
+             {
+                 if (_isGrounded == value) return;
+                 _isGrounded = value;
+                 animator.SetTrigger(_inAirId);
+             }
+         }
 
          [Header("Animation")]
          public Animator animator;
@@ -49,13 +65,16 @@ namespace Character
          private readonly int _sprintId = Animator.StringToHash("Sprint");
          private readonly int _jumpId = Animator.StringToHash("JumpTrigger");
          private readonly int _groundId = Animator.StringToHash("Ground");
+         private readonly int _inAirId = Animator.StringToHash("InAir");
 
          private Vector3 _moveDirection;
          private Vector3 _slopeMoveDirection;
          
-         [NonSerialized] public Rigidbody Rb;
+         [NonSerialized] private Rigidbody _rb;
 
          private RaycastHit _slopeHit;
+         
+         // Hot Fix animation
 
          private bool OnSlope()
          {
@@ -68,8 +87,8 @@ namespace Character
 
          private void Start()
          {
-             Rb = GetComponent<Rigidbody>();
-             Rb.freezeRotation = true;
+             _rb = GetComponent<Rigidbody>();
+             _rb.freezeRotation = true;
 
              Cursor.visible = false;
              Cursor.lockState = CursorLockMode.Locked;
@@ -104,8 +123,8 @@ namespace Character
          {
              if (!IsGrounded) return;
              animator.SetTrigger(_jumpId);
-             Rb.velocity = new Vector3(Rb.velocity.x, 0, Rb.velocity.z);
-             Rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
+             _rb.velocity = new Vector3(_rb.velocity.x, 0, _rb.velocity.z);
+             _rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
          }
 
          private void ControlSpeed()
@@ -124,13 +143,14 @@ namespace Character
 
          private void ControlDrag()
          {
-             Rb.drag = IsGrounded ? groundDrag : airDrag;
+             _rb.drag = IsGrounded ? groundDrag : airDrag;
          }
 
          private void FixedUpdate()
          {
              MovePlayer();
              ControlJump();
+             StepClimb();
          }
 
          private void MovePlayer()
@@ -138,21 +158,21 @@ namespace Character
              switch (IsGrounded)
              {
                  case true when !OnSlope():
-                     Rb.AddForce(_moveDirection.normalized * moveSpeed * _movementMultiplier, ForceMode.Acceleration);
+                     _rb.AddForce(_moveDirection.normalized * moveSpeed * movementMultiplier, ForceMode.Acceleration);
                      break;
                  case true when OnSlope():
-                     Rb.AddForce(_slopeMoveDirection.normalized * moveSpeed * _movementMultiplier, ForceMode.Acceleration);
+                     _rb.AddForce(_slopeMoveDirection.normalized * moveSpeed * movementMultiplier, ForceMode.Acceleration);
                      break;
                  case false:
-                     Rb.AddForce(_moveDirection.normalized * moveSpeed * _movementMultiplier * airMultiplier, ForceMode.Acceleration);
+                     _rb.AddForce(_moveDirection.normalized * moveSpeed * movementMultiplier * airMultiplier, ForceMode.Acceleration);
                      break;
              }
              
-             animator.SetFloat(_speedId, Rb.velocity.magnitude);
+             animator.SetFloat(_speedId, _rb.velocity.magnitude);
          }
 
          private void ControlJump()
-         {
+         { 
              animator.SetBool(_groundId, IsGrounded);
          }
 
@@ -163,6 +183,22 @@ namespace Character
              
              if (_moveDirection != Vector3.zero)
                  transform.forward = Vector3.Slerp(transform.forward, _moveDirection.normalized, Time.deltaTime * rotationSpeed);
+         }
+         
+         // Climb
+         private void StepClimb()
+         {
+             if (Physics.Raycast(stepRayLower.transform.position, transform.TransformDirection(Vector3.forward), out var hitLower, .1f))
+                if (!Physics.Raycast(stepRayUpper.transform.position, transform.TransformDirection(Vector3.forward), out var hitUpper, .2f))
+                         _rb.position -= new Vector3(0, -stepSmooth, 0);
+             
+             if (Physics.Raycast(stepRayLower.transform.position, transform.TransformDirection(1.5f,0,1), out var hitLower45, 0.1f))
+                 if (!Physics.Raycast(stepRayUpper.transform.position, transform.TransformDirection(1.5f,0,1), out var hitUpper45, 0.2f))
+                     _rb.position -= new Vector3(0f, -stepSmooth * Time.deltaTime, 0f);
+
+             if (Physics.Raycast(stepRayLower.transform.position, transform.TransformDirection(-1.5f,0,1), out var hitLowerMinus45, 0.1f))
+                 if (!Physics.Raycast(stepRayUpper.transform.position, transform.TransformDirection(-1.5f,0,1), out var hitUpperMinus45, 0.2f))
+                     _rb.position -= new Vector3(0f, -stepSmooth * Time.deltaTime, 0f);
          }
     }
 }
