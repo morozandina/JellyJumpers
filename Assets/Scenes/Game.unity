@@ -2013,7 +2013,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 134342745}
-  m_LocalRotation: {x: 0.098537624, y: 0.0000000042806607, z: -4.238689e-10, w: 0.99513334}
+  m_LocalRotation: {x: 0.09853762, y: -0.000000004280661, z: 4.238689e-10, w: 0.99513334}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -4251,7 +4251,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 296338800}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.3, z: 0.15}
+  m_LocalPosition: {x: 0, y: 0.35, z: 0.4}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -7096,6 +7096,7 @@ GameObject:
   - component: {fileID: 520550553}
   - component: {fileID: 520550552}
   - component: {fileID: 520550551}
+  - component: {fileID: 520550557}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -7119,11 +7120,8 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 128
   capsule: {fileID: 520550555}
-  checkDistance: 0.5
   upDistance: 1
-  boxCastSize: {x: 0.5, y: 0.5, z: 0.5}
-  boxCastOffset: {x: 0, y: 0, z: 0.75}
-  rayCastOffset: {x: 0, y: 1, z: 1}
+  rayCastOffset: {x: 0, y: 1, z: 0}
 --- !u!114 &520550552
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7155,9 +7153,6 @@ MonoBehaviour:
   airMultiplier: 0.4
   movementMultiplier: 10
   rotationSpeed: 10
-  stepRayUpper: {fileID: 296338800}
-  stepRayLower: {fileID: 882527411}
-  stepSmooth: 0.1
   walkSpeed: 4
   sprintSpeed: 6
   acceleration: 20
@@ -7242,6 +7237,22 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: -65.786, z: 0}
+--- !u!114 &520550557
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 520550550}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e1d18064f8b545ac90e5f857929e768, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  stepRayUpper: {fileID: 296338800}
+  stepRayLower: {fileID: 882527411}
+  stepHeight: 0.3
+  stepSmooth: 2
 --- !u!1001 &526401318
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -12934,7 +12945,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 882527411}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.01, z: 0.15}
+  m_LocalPosition: {x: 0, y: 0.01, z: 0.4}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

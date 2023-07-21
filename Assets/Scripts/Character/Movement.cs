@@ -18,11 +18,6 @@ namespace Character
          [SerializeField] private float movementMultiplier = 10f;
          [SerializeField] private float rotationSpeed;
 
-         [Header("Step Climb")]
-         [SerializeField] private GameObject stepRayUpper;
-         [SerializeField] private GameObject stepRayLower;
-         [SerializeField] private float stepSmooth = .1f;
-
          [Header("Sprinting")]
          [SerializeField] private float walkSpeed = 4f;
          [SerializeField] private float sprintSpeed = 6f;
@@ -150,7 +145,6 @@ namespace Character
          {
              MovePlayer();
              ControlJump();
-             StepClimb();
          }
 
          private void MovePlayer()
@@ -183,22 +177,6 @@ namespace Character
              
              if (_moveDirection != Vector3.zero)
                  transform.forward = Vector3.Slerp(transform.forward, _moveDirection.normalized, Time.deltaTime * rotationSpeed);
-         }
-         
-         // Climb
-         private void StepClimb()
-         {
-             if (Physics.Raycast(stepRayLower.transform.position, transform.TransformDirection(Vector3.forward), out var hitLower, .1f))
-                if (!Physics.Raycast(stepRayUpper.transform.position, transform.TransformDirection(Vector3.forward), out var hitUpper, .2f))
-                         _rb.position -= new Vector3(0, -stepSmooth, 0);
-             
-             if (Physics.Raycast(stepRayLower.transform.position, transform.TransformDirection(1.5f,0,1), out var hitLower45, 0.1f))
-                 if (!Physics.Raycast(stepRayUpper.transform.position, transform.TransformDirection(1.5f,0,1), out var hitUpper45, 0.2f))
-                     _rb.position -= new Vector3(0f, -stepSmooth * Time.deltaTime, 0f);
-
-             if (Physics.Raycast(stepRayLower.transform.position, transform.TransformDirection(-1.5f,0,1), out var hitLowerMinus45, 0.1f))
-                 if (!Physics.Raycast(stepRayUpper.transform.position, transform.TransformDirection(-1.5f,0,1), out var hitUpperMinus45, 0.2f))
-                     _rb.position -= new Vector3(0f, -stepSmooth * Time.deltaTime, 0f);
          }
     }
 }
