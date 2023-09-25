@@ -32,7 +32,7 @@ namespace Character
 
         private void FixedUpdate()
         {
-            if (_movement.IsGrounded)
+            if (_isClimbing)
                 return;
             
             if (Physics.Raycast(capsule.bounds.center + (transform.forward / 1.5f) + rayCastOffset, -transform.up, out var hit, upDistance, hitMask))

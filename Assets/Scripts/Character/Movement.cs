@@ -7,7 +7,7 @@ namespace Character
     [RequireComponent(typeof(Rigidbody), typeof(CapsuleCollider))]
     public class Movement : MonoBehaviour
     {
-         private float _playerHeight = 2f;
+         private float _playerHeight;
 
          [SerializeField] private Transform orientation;
          [SerializeField] private Transform cam;
@@ -25,6 +25,10 @@ namespace Character
 
          [Header("Jumping")]
          public float jumpForce = 5f;
+
+         [Header("Slope")]
+         [SerializeField] private float slopeForce;
+         [SerializeField] private float slopeForceRayLength;
 
          [Header("Keybindings")]
          [SerializeField] private KeyCode jumpKey = KeyCode.Space;
@@ -63,27 +67,14 @@ namespace Character
          private readonly int _inAirId = Animator.StringToHash("InAir");
 
          private Vector3 _moveDirection;
-         private Vector3 _slopeMoveDirection;
-         
+
          [NonSerialized] private Rigidbody _rb;
-
-         private RaycastHit _slopeHit;
-         
-         // Hot Fix animation
-
-         private bool OnSlope()
-         {
-             if (Physics.Raycast(transform.position, Vector3.down, out _slopeHit, _playerHeight / 2 + 0.5f))
-             {
-                 return _slopeHit.normal != Vector3.up;
-             }
-             return false;
-         }
 
          private void Start()
          {
              _rb = GetComponent<Rigidbody>();
              _rb.freezeRotation = true;
+             _playerHeight = GetComponent<CapsuleCollider>().height;
 
              Cursor.visible = false;
              Cursor.lockState = CursorLockMode.Locked;
@@ -97,13 +88,8 @@ namespace Character
              RotatePlayer();
              ControlDrag();
              ControlSpeed();
-
              if (Input.GetKeyDown(jumpKey) && IsGrounded)
-             {
                  Jump();
-             }
-
-             _slopeMoveDirection = Vector3.ProjectOnPlane(_moveDirection, _slopeHit.normal);
          }
 
          private void MyInput()
@@ -151,11 +137,8 @@ namespace Character
          {
              switch (IsGrounded)
              {
-                 case true when !OnSlope():
+                 case true:
                      _rb.AddForce(_moveDirection.normalized * moveSpeed * movementMultiplier, ForceMode.Acceleration);
-                     break;
-                 case true when OnSlope():
-                     _rb.AddForce(_slopeMoveDirection.normalized * moveSpeed * movementMultiplier, ForceMode.Acceleration);
                      break;
                  case false:
                      _rb.AddForce(_moveDirection.normalized * moveSpeed * movementMultiplier * airMultiplier, ForceMode.Acceleration);
