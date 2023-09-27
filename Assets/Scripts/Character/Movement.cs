@@ -1,4 +1,5 @@
 using System;
+using CustomPhysics;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -25,10 +26,6 @@ namespace Character
 
          [Header("Jumping")]
          public float jumpForce = 5f;
-
-         [Header("Slope")]
-         [SerializeField] private float slopeForce;
-         [SerializeField] private float slopeForceRayLength;
 
          [Header("Keybindings")]
          [SerializeField] private KeyCode jumpKey = KeyCode.Space;
@@ -67,6 +64,8 @@ namespace Character
          private readonly int _inAirId = Animator.StringToHash("InAir");
 
          private Vector3 _moveDirection;
+         private RaycastHit _slopeHit;
+         private Vector3 _slopeMoveDirection;
 
          [NonSerialized] private Rigidbody _rb;
 
@@ -90,6 +89,16 @@ namespace Character
              ControlSpeed();
              if (Input.GetKeyDown(jumpKey) && IsGrounded)
                  Jump();
+
+             _slopeMoveDirection = Vector3.ProjectOnPlane(_moveDirection, _slopeHit.normal);
+         }
+
+         private bool OnSlope()
+         {
+             if (Physics.Raycast(transform.position, Vector3.down, out _slopeHit, _playerHeight / 2 + .5f))
+                 return _slopeHit.normal != Vector3.up;
+
+             return false;
          }
 
          private void MyInput()
@@ -131,21 +140,29 @@ namespace Character
          {
              MovePlayer();
              ControlJump();
+
+             GetComponent<CustomGravity>().enabled = !OnSlope();
          }
 
          private void MovePlayer()
          {
              switch (IsGrounded)
              {
-                 case true:
+                 case true when !OnSlope():
                      _rb.AddForce(_moveDirection.normalized * moveSpeed * movementMultiplier, ForceMode.Acceleration);
+                     break;
+                 case true when OnSlope():
+                     _rb.AddForce(_slopeMoveDirection.normalized * moveSpeed * movementMultiplier, ForceMode.Acceleration);
                      break;
                  case false:
                      _rb.AddForce(_moveDirection.normalized * moveSpeed * movementMultiplier * airMultiplier, ForceMode.Acceleration);
                      break;
              }
-             
-             animator.SetFloat(_speedId, _rb.velocity.magnitude);
+
+             if (OnSlope() && _rb.velocity.magnitude < .2f)
+                 animator.SetFloat(_speedId, 0);
+             else
+                 animator.SetFloat(_speedId, _rb.velocity.magnitude);
          }
 
          private void ControlJump()
