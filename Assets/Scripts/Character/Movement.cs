@@ -1,4 +1,5 @@
 using System;
+using CustomPhysics;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -7,7 +8,7 @@ namespace Character
     [RequireComponent(typeof(Rigidbody), typeof(CapsuleCollider))]
     public class Movement : MonoBehaviour
     {
-         private float _playerHeight = 2f;
+         private float _playerHeight;
 
          [SerializeField] private Transform orientation;
          [SerializeField] private Transform cam;
@@ -17,11 +18,6 @@ namespace Character
          [SerializeField] private float airMultiplier = 0.4f;
          [SerializeField] private float movementMultiplier = 10f;
          [SerializeField] private float rotationSpeed;
-
-         [Header("Step Climb")]
-         [SerializeField] private GameObject stepRayUpper;
-         [SerializeField] private GameObject stepRayLower;
-         [SerializeField] private float stepSmooth = .1f;
 
          [Header("Sprinting")]
          [SerializeField] private float walkSpeed = 4f;
@@ -68,27 +64,16 @@ namespace Character
          private readonly int _inAirId = Animator.StringToHash("InAir");
 
          private Vector3 _moveDirection;
-         private Vector3 _slopeMoveDirection;
-         
-         [NonSerialized] private Rigidbody _rb;
-
          private RaycastHit _slopeHit;
-         
-         // Hot Fix animation
+         private Vector3 _slopeMoveDirection;
 
-         private bool OnSlope()
-         {
-             if (Physics.Raycast(transform.position, Vector3.down, out _slopeHit, _playerHeight / 2 + 0.5f))
-             {
-                 return _slopeHit.normal != Vector3.up;
-             }
-             return false;
-         }
+         [NonSerialized] private Rigidbody _rb;
 
          private void Start()
          {
              _rb = GetComponent<Rigidbody>();
              _rb.freezeRotation = true;
+             _playerHeight = GetComponent<CapsuleCollider>().height;
 
              Cursor.visible = false;
              Cursor.lockState = CursorLockMode.Locked;
@@ -102,13 +87,18 @@ namespace Character
              RotatePlayer();
              ControlDrag();
              ControlSpeed();
-
              if (Input.GetKeyDown(jumpKey) && IsGrounded)
-             {
                  Jump();
-             }
 
              _slopeMoveDirection = Vector3.ProjectOnPlane(_moveDirection, _slopeHit.normal);
+         }
+
+         private bool OnSlope()
+         {
+             if (Physics.Raycast(transform.position, Vector3.down, out _slopeHit, _playerHeight / 2 + .5f))
+                 return _slopeHit.normal != Vector3.up;
+
+             return false;
          }
 
          private void MyInput()
@@ -150,7 +140,8 @@ namespace Character
          {
              MovePlayer();
              ControlJump();
-             StepClimb();
+
+             GetComponent<CustomGravity>().enabled = !OnSlope();
          }
 
          private void MovePlayer()
@@ -167,8 +158,11 @@ namespace Character
                      _rb.AddForce(_moveDirection.normalized * moveSpeed * movementMultiplier * airMultiplier, ForceMode.Acceleration);
                      break;
              }
-             
-             animator.SetFloat(_speedId, _rb.velocity.magnitude);
+
+             if (OnSlope() && _rb.velocity.magnitude < .2f)
+                 animator.SetFloat(_speedId, 0);
+             else
+                 animator.SetFloat(_speedId, _rb.velocity.magnitude);
          }
 
          private void ControlJump()
@@ -183,22 +177,6 @@ namespace Character
              
              if (_moveDirection != Vector3.zero)
                  transform.forward = Vector3.Slerp(transform.forward, _moveDirection.normalized, Time.deltaTime * rotationSpeed);
-         }
-         
-         // Climb
-         private void StepClimb()
-         {
-             if (Physics.Raycast(stepRayLower.transform.position, transform.TransformDirection(Vector3.forward), out var hitLower, .1f))
-                if (!Physics.Raycast(stepRayUpper.transform.position, transform.TransformDirection(Vector3.forward), out var hitUpper, .2f))
-                         _rb.position -= new Vector3(0, -stepSmooth, 0);
-             
-             if (Physics.Raycast(stepRayLower.transform.position, transform.TransformDirection(1.5f,0,1), out var hitLower45, 0.1f))
-                 if (!Physics.Raycast(stepRayUpper.transform.position, transform.TransformDirection(1.5f,0,1), out var hitUpper45, 0.2f))
-                     _rb.position -= new Vector3(0f, -stepSmooth * Time.deltaTime, 0f);
-
-             if (Physics.Raycast(stepRayLower.transform.position, transform.TransformDirection(-1.5f,0,1), out var hitLowerMinus45, 0.1f))
-                 if (!Physics.Raycast(stepRayUpper.transform.position, transform.TransformDirection(-1.5f,0,1), out var hitUpperMinus45, 0.2f))
-                     _rb.position -= new Vector3(0f, -stepSmooth * Time.deltaTime, 0f);
          }
     }
 }
